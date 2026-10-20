@@ -1,0 +1,16 @@
+﻿paso,filas_afectadas,justificacion
+Eliminar duplicados exactos,50,Registros idénticos (incluido job_id) inflan conteos y sesgan medias.
+Normalizar escritura de 'industry',2127,"Variantes como ' Technology ', 'TECHNOLOGY' o 'technology' son la misma categoría."
+Castear salarios a float,1347,"Montos guardados como texto ('$32,820.29') impiden operar numéricamente."
+Castear año a entero,389,El año es una variable discreta; '2021.0' y '2021' deben ser el mismo valor.
+Salario previo centinela (-99999) -> nulo,10,Un salario negativo es imposible; se trata como faltante y se recupera luego por fórmula.
+Corregir salario posterior inflado x10,10,El valor es exactamente 10 veces el esperado según salario previo y % de cambio: error de carga.
+Eliminar contradicción salarial (antes = después con cambio != 0),30,No se puede saber qué campo es el verdadero; además el índice de volatilidad tampoco coincide.
+"Acotar ai_replacement_score a [0, 100]",94,Es un puntaje en escala 0-100 (igual que el riesgo); valores > 100 son ruido fuera de escala.
+Recuperar salario previo por fórmula,720,"salary_change_percent es completo: antes = después / (1 + cambio%/100). Valor exacto, no estimado."
+Recuperar salario posterior por fórmula,709,"después = antes * (1 + cambio%/100). Valor exacto, no estimado."
+Eliminar registros sin ningún salario,40,Sin ninguno de los dos salarios no hay base para reconstruirlos; imputar la media inventaría datos.
+Recuperar riesgo de automatización por fórmula,745,Identidad verificada en el 100% de filas completas: presión = (brecha + riesgo) / 2.
+Recalcular categoría de riesgo (umbrales 30/60),0,Garantiza coherencia entre el % de riesgo y su categoría Low/Medium/High.
+Imputar industria faltante como 'Sin dato',742,No es deducible de otras columnas; se conserva el registro para análisis globales y se excluye del sector.
+Traducir al español y asignar tipos,14930,"Lectura fluida en español; categóricos como 'category', numéricos como float, índice reseteado."

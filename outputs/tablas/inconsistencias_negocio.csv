@@ -1,0 +1,6 @@
+﻿regla,registros_que_la_violan
+Salario posterior != antes * (1 + cambio%),0
+Salario antes = después con cambio != 0,0
+Salario <= 0,0
+Puntaje de reemplazo fuera de 0-100,0
+Categoría de riesgo incoherente con el %,0

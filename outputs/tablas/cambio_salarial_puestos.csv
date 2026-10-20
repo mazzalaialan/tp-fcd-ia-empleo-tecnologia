@@ -1,0 +1,11 @@
+﻿puesto,cambio_medio_pct,cambio_mediano_pct,salario_medio_antes,salario_medio_despues,cambio_salario_medio_pct
+Docente,1.3618,1.47,84267.6951,85295.3483,1.2195
+Ingeniero/a Mecánico/a,0.7119,1.65,90865.7202,91839.149,1.0713
+Analista de Datos,0.5022,-0.55,90874.522,91056.6352,0.2004
+Camionero/a,0.4237,0.12,92744.2299,92983.7522,0.2583
+Gerente de RR.HH.,0.3683,1.06,90975.232,90911.6529,-0.0699
+Analista Financiero/a,0.2497,1.23,90365.6925,90249.6412,-0.1284
+Contador/a,0.1183,-0.09,94269.8788,94385.2618,0.1224
+Ingeniero/a de Software,-0.2183,0.38,87781.2396,87980.0138,0.2264
+Especialista en Marketing,-0.7986,-0.265,89431.6448,88651.1439,-0.8727
+Atención al Cliente,-1.054,-1.07,91477.9342,91212.4009,-0.2903

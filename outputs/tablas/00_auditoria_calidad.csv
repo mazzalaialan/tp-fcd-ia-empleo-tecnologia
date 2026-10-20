@@ -1,0 +1,13 @@
+﻿problema,columna,cantidad
+Filas duplicadas exactas,todas,50
+Valores nulos,industry,751
+Valores nulos,automation_risk_percent,752
+Valores nulos,salary_before_usd,753
+Valores nulos,salary_after_usd,754
+Escrituras inconsistentes (32 variantes para 8 categorías),industry,2134
+Monto con formato texto ($ y comas),salary_before_usd,1348
+Salario negativo o cero (valor centinela),salary_before_usd,10
+Monto con formato texto ($ y comas),salary_after_usd,1
+Año con formato decimal,year,390
+Score fuera del rango 0-100,ai_replacement_score,95
+Salario posterior no coincide con el % de cambio,salary_after_usd,48

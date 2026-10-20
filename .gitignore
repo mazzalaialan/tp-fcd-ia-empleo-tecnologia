@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Datos procesados: se regeneran con `python main.py`
+data/processed/*
+!data/processed/.gitkeep
+
+# Editores y sistema operativo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
