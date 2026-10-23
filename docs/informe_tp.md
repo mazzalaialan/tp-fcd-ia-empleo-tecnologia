@@ -9,10 +9,12 @@
 
 ## 1. Resumen ejecutivo
 
-- El dataset crudo tenía **15.050 registros** con anomalías en 9 de sus 20 columnas. Después del
-  saneamiento quedaron **14.930 registros válidos** (se descartó el 0,8 %). **1.790 corresponden al sector Tecnología.**
-- La mayoría de los valores faltantes **se recuperó con exactitud** gracias a relaciones matemáticas
-  internas del dataset, en vez de imputar promedios.
+- El dataset crudo tenía **15.050 registros**; **1.804 corresponden al sector Tecnología**, con anomalías de
+  nulos, formato e inconsistencias lógicas. Después del saneamiento quedaron **1.793 registros válidos**
+  (se descartó el 0,6 %: 7 duplicados y 4 contradicciones).
+- **247 de los 253 valores faltantes se recuperaron con exactitud** gracias a relaciones matemáticas
+  internas del dataset, en vez de imputar promedios. Los 6 restantes son 3 registros sin ningún salario, a los que se les
+  imputó la media porque ni la regresión ni el KNN la mejoraron.
 - **Salarios:** la media casi no cambia (USD 90.250 → 90.412, +0,18 %), pero la dispersión crece
   (desvío +3,7 %, Gini 0,226 → 0,233). Solo el 40 % de los trabajadores quedó estable: el 31 % ganó
   más de un 5 % y el 30 % perdió más de un 5 %. **Hay una polarización moderada a nivel individual.**
@@ -27,70 +29,166 @@
 
 ## 2. Fase I — Auditoría de calidad
 
-Diagnóstico del archivo crudo, antes de modificar nada (`outputs/tablas/00_auditoria_calidad.csv`):
+El archivo crudo tiene **15.050 registros** de todos los sectores. La carga se queda con el sector asignado:
+se normaliza la escritura de `industria` (hay variantes con espacios y mayúsculas) y se conservan los
+**1.804 registros de Tecnología**. Los 751 registros sin industria no se pueden asignar a ningún sector y
+quedan fuera del análisis.
 
-| Problema | Columna | Registros |
-|---|---|---:|
-| Filas duplicadas exactas | todas | 50 |
-| Valores nulos | `industry` | 751 |
-| Valores nulos | `automation_risk_percent` | 752 |
-| Valores nulos | `salary_before_usd` | 753 |
-| Valores nulos | `salary_after_usd` | 754 |
-| Escritura inconsistente (32 variantes para 8 categorías: `" Technology "`, `TECHNOLOGY`, `technology`…) | `industry` | 2.134 |
-| Monto guardado como texto (`"$32,820.29"`) | `salary_before_usd` | 1.348 |
-| Monto guardado como texto | `salary_after_usd` | 1 |
-| Valor centinela `-99999` (salario negativo) | `salary_before_usd` | 10 |
-| Año con formato decimal (`2021.0`) | `year` | 390 |
-| Puntaje fuera de la escala 0-100 (máx. 113,07) | `ai_replacement_score` | 95 |
-| Salario posterior que no coincide con el % de cambio | `salary_after_usd` | 48 |
+### Diccionario de campos
+
+La normalización traduce los nombres de las 20 columnas. En todo el informe se usan los nombres en español:
+
+| Nombre original | Nombre en español | Significado |
+|---|---|---|
+| `job_id` | `id_registro` | Identificador del registro |
+| `job_role` | `puesto` | Puesto de trabajo |
+| `industry` | `industria` | Sector |
+| `country` | `pais` | País |
+| `year` | `anio` | Año |
+| `automation_risk_percent` | `riesgo_automatizacion_pct` | Riesgo de automatización (0–100) |
+| `ai_replacement_score` | `puntaje_reemplazo_ia` | Puntaje de reemplazo por IA (0–100) |
+| `skill_gap_index` | `indice_brecha_habilidades` | Brecha de habilidades |
+| `salary_before_usd` | `salario_antes_usd` | Salario previo a la IA (USD) |
+| `salary_after_usd` | `salario_despues_usd` | Salario posterior a la IA (USD) |
+| `salary_change_percent` | `cambio_salarial_pct` | Cambio salarial (%) |
+| `skill_demand_growth_percent` | `crecimiento_demanda_habilidades_pct` | Crecimiento de la demanda de habilidades (%) |
+| `remote_feasibility_score` | `factibilidad_remota` | Factibilidad de trabajo remoto |
+| `ai_adoption_level` | `nivel_adopcion_ia` | Nivel de adopción de IA |
+| `education_requirement_level` | `nivel_educativo_requerido` | Nivel educativo requerido |
+| `automation_risk_category` | `categoria_riesgo` | Categoría de riesgo (Bajo, Medio, Alto) |
+| `skill_transition_pressure` | `presion_reconversion` | Presión de reconversión |
+| `wage_volatility_index` | `indice_volatilidad_salarial` | Volatilidad salarial |
+| `reskilling_urgency_score` | `urgencia_recapacitacion` | Urgencia de re-capacitación |
+| `ai_disruption_intensity` | `intensidad_disrupcion_ia` | Intensidad de disrupción por IA |
+
+La auditoría solo diagnostica: mide qué está mal y no modifica nada. Se aplica a esos 1.804 registros
+crudos (`outputs/tablas/00_auditoria_calidad.csv`):
+
+| Problema | Columna | Registros | Detalle |
+|---|---|---:|---|
+| Valores nulos | `riesgo_automatizacion_pct` | 79 | 4,4 % de la columna |
+| Valores nulos | `salario_antes_usd` | 90 | 5,0 % de la columna |
+| Valores nulos | `salario_despues_usd` | 84 | 4,7 % de la columna |
+| Escritura inconsistente de la industria | `industria` | 267 | `" Technology "` (96), `technology` (92), `TECHNOLOGY` (79) |
+| Año con formato decimal | `anio` | 39 | `2021.0` |
+| Monto guardado como texto | `salario_antes_usd` | 161 | `"$61,170.45"` |
+| Filas duplicadas exactas | todas | 7 | Comparten incluso `id_registro` |
+| Puntaje fuera de la escala 0-100 | `puntaje_reemplazo_ia` | 7 | Máximo 107,6 |
+| Salario posterior que no cumple la relación con el % de cambio | `salario_despues_usd` | 5 | Cumplen 1.628 de 1.633 filas evaluadas |
+| Salario posterior fuera del límite superior del IQR | `salario_despues_usd` | 1 | `id_registro` 3872; límite 210.405,62 |
+| Salario antes = después con cambio % distinto de 0 | `salario_despues_usd` | 4 | `id_registro` 4705, 4710, 6258 y 9069 |
+
+Los 5 salarios que no cumplen la relación son los mismos de las dos últimas filas: 1 salario
+atípico y 4 contradicciones. Se superponen, no se suman. El salario atípico (`id_registro` 3872) tiene USD 672.289,50
+donde correspondían 67.226,56, es decir, está cargado **exactamente ×10**. El valor centinela `-99999`
+(10 veces en el archivo completo) no aparece en Tecnología.
 
 ### Relaciones internas descubiertas
 
 Al explorar el dataset verificamos que varias columnas son **derivadas** de otras. Estas identidades
-se cumplen en el 100 % de los registros completos, salvo en los registros con errores que se describen
-más abajo, y fueron clave para la limpieza:
+se cumplen en todos los registros completos, salvo en los 5 con errores que se describieron más arriba, y fueron
+clave para la limpieza:
 
-| Identidad | Uso |
-|---|---|
-| `salary_after = salary_before × (1 + salary_change_percent / 100)` | Recuperar salarios faltantes y detectar errores |
-| `skill_transition_pressure = (skill_gap_index + automation_risk_percent) / 2` | Recuperar el riesgo faltante |
-| `ai_disruption_intensity = automation_risk_percent × ai_adoption_level / 100` | Verificación cruzada |
-| `wage_volatility_index = abs(salary_change_percent)` | Confirmar contradicciones salariales |
-| Categoría: Low < 30 ≤ Medium < 60 ≤ High | Coherencia entre % y categoría |
+| Identidad | Se cumple en | Uso |
+|---|---|---|
+| `salario_despues = salario_antes × (1 + cambio_salarial_pct / 100)` | 1.628 de 1.633 filas evaluadas (las 5 excepciones son los errores descritos) | Recuperar salarios faltantes y detectar errores |
+| `presion_reconversion = (indice_brecha_habilidades + riesgo_automatizacion_pct) / 2` | 1.725 de 1.725 filas | Recuperar el riesgo faltante |
+| `intensidad_disrupcion_ia = riesgo_automatizacion_pct × nivel_adopcion_ia / 100` | 1.725 de 1.725 filas | Verificación cruzada |
+| `indice_volatilidad_salarial = abs(cambio_salarial_pct)` | 1.800 de 1.804 filas (las 4 excepciones son las contradicciones) | Confirmar contradicciones salariales |
+| Categoría de riesgo: Low < 30 ≤ Medium < 60 ≤ High | Todas las filas | Coherencia entre % y categoría |
 
-Los 48 salarios incoherentes resultaron ser de tres tipos: 10 valores centinela `-99999`, 10 salarios
-posteriores cargados **exactamente ×10** (por ejemplo, USD 915.099 donde correspondían 91.509,90) y
-30 registros con salario antes = después pero con un `salary_change_percent` de 5 %.
+La relación del riesgo se descubrió con una búsqueda automática (`05_relaciones_exactas.csv`): para cada
+columna se ajusta una regresión lineal contra todos los pares de las demás y se marca como fórmula si
+el R² llega a 0,9999. Apareció `riesgo_automatizacion_pct = 2 × presion_reconversion − indice_brecha_habilidades`
+(R² = 1 en 1.725 filas). Esa búsqueda solo ve combinaciones lineales de dos columnas, así que las
+relaciones multiplicativas (salarios, disrupción) y la de valor absoluto (volatilidad) se verificaron aparte.
+
+### Dos tipos de fórmula: explícita y descubierta
+
+Las dos fórmulas que se usan para recuperar nulos se obtienen de forma distinta, y eso explica por qué una se
+aplica siempre que se pueda y la otra funciona solo si hay datos de apoyo:
+
+| | Salarios | Riesgo de automatización |
+|---|---|---|
+| Fórmula | `después = antes × (1 + cambio/100)` | `riesgo = 2 × presión − brecha` |
+| Cómo se obtuvo | Es una relación explícita entre los dos salarios y el % de cambio, y se verificó directamente | Se descubrió con la búsqueda automática de pares de columnas (R² ≥ 0,9999) |
+| Qué se necesita para aplicarla | Que esté uno de los dos salarios (el % de cambio no tiene nulos) | Que estén presión y brecha |
+| Si falta ese dato | No hay de dónde partir y ninguna otra columna ayuda: se imputa la media | Se recupera igual, porque presión y brecha tienen datos completos en esas filas |
+
+En el riesgo, las otras columnas contienen toda la información del objetivo (el valor queda determinado
+por dos de ellas), por eso la combinación de columnas llega a un error de 0. En el salario, en cambio,
+ninguna otra columna lo determina: el R² de predicción es de apenas −0,011 a 0,046 (tabla 06). La única
+información que lo define es el otro salario, y por eso, cuando faltan los dos, la fórmula deja de servir y
+solo queda la estadística.
+
+### Cuándo no alcanza la fórmula: comparación de métodos de imputación
+
+Con una fórmula exacta se recupera el valor **verdadero**, mientras que cualquier imputación estima con
+error. Lo comprobamos en el riesgo de automatización (`02_comparacion_imputacion.csv`), donde además existe
+una regresión razonable:
+
+| Método | Error típico (puntos de riesgo) |
+|---|---:|
+| Media | 21,3 |
+| Regresión lineal (R² de predicción 0,943) | 5,1 |
+| Fórmula | 0 |
+
+Quedan **3 registros sin ningún salario**, donde la fórmula no se puede aplicar porque faltan los dos
+datos. Para ellos probamos predecir cada salario con las 13 columnas numéricas restantes, sin usar
+el otro salario (`06_salarios_sin_el_otro.csv`; separación 80 % entrenamiento / 20 % prueba):
+
+| Salario | R² de ajuste | R² de predicción | Error media | Error regresión | Error KNN |
+|---|---:|---:|---:|---:|---:|
+| Previo | 0,003 | −0,011 | USD 34.014 | USD 34.138 | USD 37.182 |
+| Posterior | 0,060 | 0,046 | USD 35.939 | USD 34.923 | USD 39.302 |
+
+Ninguna otra columna explica el salario: el R² de predicción del salario previo es negativo, la regresión
+no mejora a la media y el KNN es peor. Por eso, en esos 3 registros se imputa la **media** del salario previo
+y el posterior se calcula con la fórmula.
+
+### Asimetría y valores atípicos
+
+Con la regla del IQR (`03_asimetria_outliers.csv`) casi todas las variables son simétricas. Tienen cola derecha
+`indice_volatilidad_salarial` (0,99) y `intensidad_disrupcion_ia` (1,06), lo esperable en variables que
+son un valor absoluto y un producto, y `salario_despues_usd` (1,98), por un único valor: el ×10. El IQR
+marca ese salario como atípico, y la relación con el % de cambio confirma que es un error de carga. Los demás extremos
+(por ejemplo, 12 en `cambio_salarial_pct` y 40 en `intensidad_disrupcion_ia`) no contradicen ninguna relación,
+así que se conservan como valores extremos válidos.
 
 ---
 
 ## 3. Bitácora de saneamiento
 
-Orden de ejecución y justificación técnica (`outputs/tablas/00_bitacora_saneamiento.csv`):
+Orden de ejecución y justificación técnica (`outputs/tablas/00_bitacora_saneamiento.csv`). Cada módulo
+registra sus pasos y `main.py` guarda el resultado al final:
 
 | # | Decisión | Registros | Justificación |
 |---|---|---:|---|
-| 1 | Eliminar duplicados exactos | 50 | Comparten incluso `job_id`: son copias que inflan los conteos y sesgan las medias. |
-| 2 | Normalizar `industry` (sin espacios extremos, Formato Título) | 2.127 | Son la misma categoría escrita de distinta forma; si no se unifican, el filtro por sector pierde registros. |
-| 3 | Castear salarios a `float` (quitar `$` y `,`) | 1.347 | Un monto guardado como texto no se puede sumar ni promediar. |
-| 4 | Castear año a entero | 389 | El año es discreto; `2021.0` y `2021` deben ser el mismo valor. |
-| 5 | Centinela `-99999` → nulo | 10 | Un salario negativo es imposible. Se lo trata como faltante y se recupera en el paso 9. |
-| 6 | Dividir por 10 los salarios posteriores inflados | 10 | El valor es exactamente 10 veces el esperado: es un error de carga, no un outlier real. |
-| 7 | Eliminar contradicciones salariales | 30 | Antes = después pero con cambio de 5 %. No se puede saber qué campo es el correcto, y la volatilidad (= cambio en valor absoluto) tampoco coincide con 5. Es el 0,2 % del total. |
-| 8 | Acotar `ai_replacement_score` a [0, 100] | 94 | Es un puntaje 0-100 que acompaña al riesgo (r = 0,96); los excesos son ruido fuera de escala. |
-| 9 | Recuperar el salario previo por fórmula | 720 | `antes = después / (1 + cambio/100)`. El cambio % no tiene nulos: el valor recuperado es exacto, no estimado. |
-| 10 | Recuperar el salario posterior por fórmula | 709 | `después = antes × (1 + cambio/100)`. También exacto. |
-| 11 | Eliminar registros sin ningún salario | 40 | Sin ninguno de los dos salarios no hay base para reconstruirlos; imputar la media inventaría datos. |
-| 12 | Recuperar el riesgo de automatización por fórmula | 745 | `riesgo = 2 × presión − brecha`. Exacto. |
-| 13 | Recalcular la categoría de riesgo | 0 | Control de coherencia: no hubo cambios, pero garantiza la regla. |
-| 14 | Imputar la industria faltante como "Sin dato" | 742 | No se puede deducir de otras columnas. El registro se conserva para análisis globales y queda fuera del análisis por sector. |
-| 15 | Traducir al español y asignar tipos | 14.930 | Columnas y valores en español; categóricos como `category`; índice reseteado. |
+| 1 | Incluir las variantes de escritura de `Technology` al cargar | 267 | Espacios y mayúsculas distintas: sin normalizar se habrían perdido esos registros. |
+| 2 | Eliminar duplicados exactos | 7 | Comparten incluso `id_registro`: son copias que inflan los conteos y sesgan las medias. |
+| 3 | Normalizar `industria` (sin espacios extremos, Formato Título) | 265 | Son la misma categoría escrita de distinta forma. Son 265 y no 267 porque 2 de esos registros eran duplicados que ya se habían eliminado en el paso 2. |
+| 4 | Castear salarios a `float` (quitar `$` y `,`) | 161 | Un monto guardado como texto no se puede sumar ni promediar. |
+| 5 | Castear año a entero | 39 | El año es discreto; `2021.0` y `2021` deben ser el mismo valor. |
+| 6 | Anular el salario posterior atípico (IQR) | 1 | Supera el límite superior del IQR y resulta unas 10 veces el esperado: es un error de carga, no un valor real. Se anula y se recupera con la fórmula, como los demás salarios. |
+| 7 | Eliminar contradicciones salariales | 4 | Antes = después pero con cambio de 5 %. No se puede saber qué campo es el correcto, y la volatilidad (= cambio en valor absoluto) tampoco coincide con 5. Es el 0,2 % de los registros. |
+| 8 | Acotar `puntaje_reemplazo_ia` a [0, 100] | 7 | Es un puntaje 0-100 que acompaña al riesgo; los excesos son ruido fuera de escala. |
+| 9 | Recuperar el salario previo por fórmula | 87 | `antes = después / (1 + cambio/100)`. El cambio % no tiene nulos: el valor recuperado es exacto, no estimado. |
+| 10 | Recuperar el salario posterior por fórmula | 81 | `después = antes × (1 + cambio/100)`. También exacto; incluye el salario anulado en el paso 6. |
+| 11 | Imputar la media en el salario previo de los registros sin ningún salario | 3 | La fórmula no aplica y ninguna otra columna predice el salario: R² de predicción −0,011, y ni la regresión ni el KNN mejoran a la media. |
+| 12 | Recuperar el salario posterior sobre el salario imputado | 3 | `después = antes × (1 + cambio/100)`: mantiene la coherencia con el % de cambio. |
+| 13 | Recuperar el riesgo de automatización por fórmula | 79 | `riesgo = 2 × presión − brecha`. Exacto. |
+| 14 | Recalcular la categoría de riesgo | 0 | Control de coherencia: no hubo cambios, pero garantiza la regla. |
+| 15 | Traducir al español y asignar tipos | 1.793 | Columnas y valores en español; categóricos como `category`; índice reseteado. |
+
+De los 1.804 registros crudos se descartaron 11 (7 duplicados y 4 contradicciones, el 0,6 %), y quedan **1.793 registros válidos**.
 
 **¿Por qué no imputar con la media o la mediana?** Porque el dataset permitía recuperar el valor
-**verdadero**. Imputar la media habría achicado artificialmente el desvío salarial, que es justamente
-lo que necesitamos medir para hablar de polarización.
+**verdadero**: 247 de los 253 valores nulos (el 97,6 %) se calcularon con una fórmula exacta. Imputar la media
+habría achicado artificialmente el desvío salarial, que es justamente lo que necesitamos medir para hablar de
+polarización. La media se usa solo en los 3 registros sin ningún salario (el 0,17 % de la muestra), donde la comparación
+de métodos mostró que ninguna alternativa la mejora.
 
-Al final, `validar_contrato()` verifica que no queden nulos, que los `id_registro` sean únicos y que
+Al final, `verificar_dataset_limpio()` comprueba que no queden nulos, que los `id_registro` sean únicos y que
 todos los salarios sean coherentes. Sobre el dataset limpio, las 5 reglas de negocio dan **0 violaciones**
 (`inconsistencias_negocio.csv`).
 
@@ -147,9 +245,9 @@ la credencial educativa**.
 
 ### 4.3 Inconsistencias de negocio
 
-Se detectaron y trataron en la limpieza (ver bitácora, pasos 5 a 8 y 13): 10 centinelas, 10 salarios
-×10, 30 contradicciones antes = después y 94 puntajes fuera de escala. Se verificó que, después del
-tratamiento, ninguna regla de negocio queda violada.
+Se detectaron y trataron en la limpieza (ver bitácora, pasos 6 a 8 y 14): 1 salario ×10, 4 contradicciones
+antes = después y 7 puntajes fuera de escala. Se verificó que, después del tratamiento, ninguna regla de negocio
+queda violada.
 
 ---
 
@@ -225,6 +323,9 @@ más bajo (solo 10 % de registros en categoría "Alto"), pero su salario medio c
   ejercitar el método, no para describir el mercado real.
 - Dentro de "Tecnología" aparecen puestos como Docente o Camionero/a. Esto es propio de un dataset sintético;
   los interpretamos como roles que trabajan dentro de empresas tecnológicas.
-- 742 registros sin industria quedaron fuera del análisis del sector. No se pudo saber a qué sector pertenecían.
+- 751 registros del archivo crudo no tienen industria y quedaron fuera del análisis del sector. No se pudo saber
+  a qué sector pertenecían.
+- En 3 registros sin ningún salario se imputó la media del salario previo (USD 90.250,49) y el posterior se calculó
+  con la fórmula. Son el 0,17 % de la muestra, pero esos dos valores son estimados y no observados.
 - El índice de resiliencia da el mismo peso a sus cuatro indicadores. Con otros pesos el orden de los puestos
   intermedios podría cambiar, aunque los extremos (Analista de Datos arriba, Atención al Cliente abajo) son claros.

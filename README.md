@@ -14,12 +14,14 @@ mi_proyecto/
 ├── data/
 │   ├── raw/                     # Dataset original (no se modifica nunca)
 │   │   └── ai_job_replacement_dirty.csv
-│   └── processed/               # Dataset limpio generado por el pipeline
+│   └── processed/               # Dataset limpio generado por el pipeline (no se sube a git)
 │       └── ai_job_replacement_limpio.csv
 │
 ├── src/                         # Código fuente
-│   ├── load_data.py             # Carga, validación de columnas y auditoría de calidad
-│   ├── clean_data.py            # Protocolo de curación + bitácora + validación del contrato
+│   ├── load_data.py             # Carga y filtro del sector Tecnología
+│   ├── audit.py                 # Auditoría de calidad: solo diagnostica, no modifica los datos
+│   ├── clean_data.py            # Protocolo de curación + verificación del dataset limpio
+│   ├── bitacora.py              # Bitácora compartida: cada paso de limpieza queda registrado
 │   ├── analysis.py              # Estadísticas descriptivas, rankings, correlaciones
 │   ├── visualization.py         # Gráficos con Matplotlib
 │   └── utils.py                 # Rutas, traducciones y funciones auxiliares reutilizables
@@ -60,35 +62,30 @@ Desde la carpeta raíz del proyecto:
 python main.py
 ```
 
+En Windows, sin activar el entorno virtual: `venv\Scripts\python.exe main.py`
+
 El pipeline:
 
-1. **Carga** `data/raw/ai_job_replacement_dirty.csv`, valida las columnas y genera la auditoría de calidad.
-2. **Limpia** los datos (duplicados, formatos, nulos, inconsistencias, traducción al español) y registra cada decisión en la bitácora.
-3. **Valida el contrato** (sin nulos, columnas en minúsculas, salarios coherentes, índice reseteado) y guarda el dataset limpio en `data/processed/`.
-4. **Analiza** el sector Tecnología y guarda las tablas en `outputs/tablas/`.
-5. **Grafica** y guarda los PNG en `outputs/figuras/`.
+1. **Carga** el CSV crudo y se queda con los registros de Tecnología.
+2. **Audita** la calidad de los datos y guarda las tablas en `outputs/tablas/`. No modifica nada.
+3. **Limpia** los datos y registra cada decisión en la bitácora.
+4. **Verifica** el dataset limpio y lo guarda en `data/processed/`.
+5. **Analiza** el sector y guarda las tablas en `outputs/tablas/`.
+6. **Grafica** y guarda los PNG en `outputs/figuras/`.
 
-## Contrato de datos entre módulos
-
-Lo que `clean_data.py` garantiza y `analysis.py` verifica antes de trabajar:
-
-- Columnas en español, minúsculas, sin espacios ni tildes (`salario_antes_usd`, `riesgo_automatizacion_pct`, ...).
-- Categóricos (`puesto`, `industria`, `pais`) como `category`; `categoria_riesgo` como categórica ordenada (Bajo < Medio < Alto).
-- Numéricos como `float`; `id_registro`, `anio` y `nivel_educativo_requerido` como enteros.
-- Sin nulos. Índice reseteado.
-- `salario_despues_usd = salario_antes_usd * (1 + cambio_salarial_pct / 100)` en todas las filas.
+`data/processed/` está en `.gitignore`: el CSV limpio no se sube al repositorio. Cada integrante lo genera al ejecutar `main.py`.
 
 ## Resultados
 
-El informe con resumen ejecutivo, bitácora de saneamiento, interpretación de resultados y reflexión crítica
-está en [docs/informe_tp.md](docs/informe_tp.md).
+La auditoría, la bitácora de saneamiento con la justificación de cada decisión, el análisis y la reflexión crítica
+están en el [informe](docs/informe_tp.md).
 
 ## Integrantes y responsabilidades
 
 | Integrante | Fase | Módulos |
 |---|---|---|
 | _(completar)_ | 1. Entendimiento | README.md |
-| _(completar)_ | 2. Carga y limpieza | `load_data.py`, `clean_data.py` |
+| _(completar)_ | 2. Carga, auditoría y limpieza | `load_data.py`, `audit.py`, `clean_data.py`, `bitacora.py` |
 | _(completar)_ | 3. Análisis | `analysis.py` |
 | _(completar)_ | 4. Visualización | `visualization.py` |
 | _(completar)_ | 5. Integración | `main.py`, `utils.py` |

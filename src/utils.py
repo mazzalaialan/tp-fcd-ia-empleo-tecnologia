@@ -16,6 +16,12 @@ RUTA_DATOS_LIMPIOS = RAIZ_PROYECTO / "data" / "processed" / "ai_job_replacement_
 CARPETA_TABLAS = RAIZ_PROYECTO / "outputs" / "tablas"
 CARPETA_FIGURAS = RAIZ_PROYECTO / "outputs" / "figuras"
 
+
+INDUSTRIA = "Technology"
+
+COLUMNAS_TEXTO = ["job_role", "industry", "country", "year", "automation_risk_category"]
+
+
 # Sector asignado al Grupo 1 (valor ya traducido al español).
 SECTOR_ASIGNADO = "Tecnología"
 
@@ -135,48 +141,16 @@ def resumen_estadistico(serie):
     }
 
 
-def registrar_paso(bitacora, paso, filas_afectadas, justificacion):
-    """
-    Agrega una entrada a la bitácora de saneamiento (sin modificar el original).
-
-    Parámetros:
-    -----------
-    bitacora : list[dict]
-        Bitácora acumulada hasta el momento.
-    paso : str
-        Nombre corto del paso de limpieza.
-    filas_afectadas : int
-        Cantidad de registros modificados o eliminados.
-    justificacion : str
-        Motivo técnico de la decisión.
-
-    Retorna:
-    --------
-    list[dict]
-        Nueva bitácora con la entrada agregada.
-    """
-    entrada = {"paso": paso, "filas_afectadas": int(filas_afectadas), "justificacion": justificacion}
-    return bitacora + [entrada]
-
-
 def guardar_tabla(df, nombre_archivo, carpeta=CARPETA_TABLAS):
     """
     Guarda un DataFrame como CSV (UTF-8 con BOM para que Excel respete las tildes).
 
-    Parámetros:
-    -----------
-    df : pd.DataFrame
-        Tabla a guardar.
-    nombre_archivo : str
-        Nombre del archivo, por ejemplo "auditoria.csv".
-    carpeta : Path
-        Carpeta destino (se crea si no existe).
+    Parametros: df : pd.DataFrame(tabla), str (Nombre del archivo), Path (carpeta destino) 
 
-    Retorna:
-    --------
-    Path
-        Ruta completa del archivo guardado.
+    Retorna:  Ruta completa del archivo guardado.
     """
+    
+    
     carpeta.mkdir(parents=True, exist_ok=True)
     ruta = carpeta / nombre_archivo
     df.to_csv(ruta, index=False, encoding="utf-8-sig")
