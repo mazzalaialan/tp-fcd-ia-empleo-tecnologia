@@ -1,0 +1,17 @@
+﻿columna,asimetria,cola,outliers_bajos,outliers_altos
+automation_risk_percent,0.07,simétrica,0,0
+ai_replacement_score,0.17,simétrica,0,0
+skill_gap_index,-0.02,simétrica,0,0
+salary_change_percent,0.02,simétrica,4,8
+skill_demand_growth_percent,0.01,simétrica,3,4
+remote_feasibility_score,-0.02,simétrica,0,0
+ai_adoption_level,0.08,simétrica,0,0
+education_requirement_level,0.01,simétrica,0,0
+skill_transition_pressure,0.03,simétrica,0,0
+wage_volatility_index,0.99,cola derecha,0,29
+reskilling_urgency_score,0.04,simétrica,0,0
+ai_disruption_intensity,1.06,cola derecha,0,40
+salary_before_usd,-0.0,simétrica,0,0
+salary_after_usd,1.98,cola derecha,0,1
+year,0.06,simétrica,0,0
+automation_risk_category,-0.02,simétrica,0,0
