@@ -1,0 +1,4 @@
+﻿objetivo,explicadora_1,explicadora_2,coef_1,coef_2,constante,r2,filas
+automation_risk_percent,skill_gap_index,skill_transition_pressure,-1.0,2.0,0.0,1.0,1725
+skill_gap_index,automation_risk_percent,skill_transition_pressure,-1.0,2.0,0.0,1.0,1725
+skill_transition_pressure,automation_risk_percent,skill_gap_index,0.5,0.5,0.0,1.0,1725
