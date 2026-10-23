@@ -1,0 +1,4 @@
+﻿columna,nulos,predictoras,r2_ajuste,r2_prediccion,desvio_original,error_media,error_regresion,desvio_media,desvio_regresion,desvio_knn
+automation_risk_percent,79,"ai_replacement_score, skill_transition_pressure, reskilling_urgency_score, ai_disruption_intensity",0.943,0.943,21.33,21.33,5.1,20.86,21.32,21.3
+salary_before_usd,90,salary_after_usd,0.809,0.772,35252.24,35339.92,16856.36,34361.14,35025.01,35250.91
+salary_after_usd,84,salary_before_usd,0.935,0.935,39278.22,36642.94,9334.73,38352.34,39025.61,39184.47
