@@ -85,7 +85,7 @@ están en el [informe](docs/informe_tp.md).
 | Integrante | Fase | Módulos |
 |---|---|---|
 | _(completar)_ | 1. Entendimiento | README.md |
-| _(completar)_ | 2. Carga, auditoría y limpieza | `load_data.py`, `audit.py`, `clean_data.py`, `bitacora.py` |
+| _Santiago Vega_ | 2. Carga, auditoría y limpieza | `load_data.py`, `audit.py`, `clean_data.py`, `bitacora.py` |
 | _(completar)_ | 3. Análisis | `analysis.py` |
 | _(completar)_ | 4. Visualización | `visualization.py` |
 | _(completar)_ | 5. Integración | `main.py`, `utils.py` |
