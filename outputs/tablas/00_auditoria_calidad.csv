@@ -1,0 +1,13 @@
+﻿categoria,problema,columna,cantidad,detalle
+Vacíos de datos,Valores nulos,automation_risk_percent,79,4.4% de la columna
+Vacíos de datos,Valores nulos,salary_before_usd,90,5.0% de la columna
+Vacíos de datos,Valores nulos,salary_after_usd,84,4.7% de la columna
+Errores de formato,Escrituras distintas de 'Technology',industry,267,"variantes: ' Technology ' (96), 'technology' (92), 'TECHNOLOGY' (79)"
+Errores de formato,Año con decimal,year,39,ej: 2025.0
+Errores de formato,Número guardado como texto,salary_before_usd,161,"ej: $61,170.45; tipos: {<class 'str'>: 1714, <class 'float'>: 90}"
+Inconsistencias lógicas,Filas duplicadas,todas,7,
+Inconsistencias lógicas,Puntaje fuera de 0-100,ai_replacement_score,7,
+Inconsistencias lógicas,No cumple la relación,salary_after_usd,5,salary_after = salary_before * (1 + salary_change/100); cumplen 1628 de 1633
+Inconsistencias lógicas,No cumple la relación,skill_transition_pressure,0,pressure = (skill_gap + automation_risk) / 2; cumplen 1725 de 1725
+Inconsistencias lógicas,Salario posterior fuera del límite del IQR,salary_after_usd,1,"job_id: 3872; límite superior: 210,405.62"
+Inconsistencias lógicas,Salario antes = después con cambio % distinto de 0,salary_after_usd,4,"job_id: 4705, 4710, 6258, 9069"
