@@ -83,7 +83,7 @@ def main():
     # guardamos el csv en data/processed/
     df_limpio.to_csv(RUTA_DATOS_LIMPIOS, index=False, encoding="utf-8-sig")
     
-    #guardo la informacion de la bitacora hasta el momento(mover al final de fase 4, cuando ya haya sido revisada)
+    #guardo la informacion de la bitacora hasta el momento(mover al final de fase 3, cuando ya haya sido revisada)
     guardar_tabla(obtener_bitacora(), "00_bitacora_saneamiento.csv")
 
     return   #  freno para testear FASE 1(ELIMINAR AL EMPEZAR LA FASE 2)
