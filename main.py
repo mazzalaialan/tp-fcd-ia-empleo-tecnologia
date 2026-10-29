@@ -11,7 +11,7 @@ from src.analysis import calcular_estadisticas, filtrar_sector
 from src.clean_data import limpiar_dataframe
 from src.load_data import cargar_industria
 from src.audit import auditar_calidad, nulos_recuperables_por_formula, buscar_relaciones_exactas, comparar_imputacion, asimetria_y_outliers, matriz_correlacion
-from src.bitacora import reiniciar_bitacora,obtener_bitacora
+from src.bitacora import reiniciar_bitacora, obtener_bitacora
 
 from src.utils import (
     RUTA_DATOS_CRUDOS,
