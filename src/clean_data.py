@@ -219,12 +219,13 @@ def etapa_inconsistencias(df):
                    "Supera el límite superior de la regla del IQR y resulta unas 10 veces el esperado según salario "
                    "previo y % de cambio: error de carga. Se anula y se recupera con la fórmula, como los demás salarios.")
 
-    # elimino estas filas porque el % de cambio vale 5.0 en todas y wage_volatility_index, que en el resto del
-    # dataset coincide con |cambio|, no coincide: no sé cuál de los campos es el verdadero
+    # elimino estas filas porque el salario antes y el después son iguales pero el % de cambio vale 5.0:
+    # los tres campos no pueden ser ciertos a la vez y no sé cuál es el verdadero
     mascara = detectar_contradiccion_salarial(df)
     df = eliminar_filas(df, mascara)
     registrar_paso("Eliminar contradicción salarial (antes = después con cambio != 0)", mascara.sum(),
-                   "No se puede saber qué campo es el verdadero; además el índice de volatilidad tampoco coincide.")
+                   "Los tres campos (antes, después y % de cambio) no pueden ser ciertos a la vez y no se puede saber cuál es el verdadero. "
+                   "Las filas figuran en la auditoría (00_auditoria_calidad.csv).")
 
     cantidad = (df["ai_replacement_score"] > 100).sum()
     df = recortar_a_rango(df, "ai_replacement_score", 0, 100)
