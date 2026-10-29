@@ -86,16 +86,6 @@ def main():
     #guardo la informacion de la bitacora hasta el momento(mover al final de fase 3, cuando ya haya sido revisada)
     guardar_tabla(obtener_bitacora(), "00_bitacora_saneamiento.csv")
 
-    return   #  freno para testear FASE 1(ELIMINAR AL EMPEZAR LA FASE 2)
-    
-    
-    # FASE 2 (hay que verificar esto que es lo que continua)
-    # 2. Limpieza (con bitácora de decisiones)
-    df_limpio, bitacora = limpiar_dataframe(df_industria)
-    guardar_tabla(bitacora, "00_bitacora_saneamiento.csv")
-    RUTA_DATOS_LIMPIOS.parent.mkdir(parents=True, exist_ok=True)
-    df_limpio.to_csv(RUTA_DATOS_LIMPIOS, index=False, encoding="utf-8-sig")
-
     # 3. Análisis del sector asignado
     df_industria = filtrar_sector(df_limpio, SECTOR_ASIGNADO)
     resultados = calcular_estadisticas(df_industria)
