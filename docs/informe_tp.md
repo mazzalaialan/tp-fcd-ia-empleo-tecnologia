@@ -15,10 +15,10 @@
 - **247 de los 253 valores faltantes se recuperaron con exactitud** gracias a relaciones matemáticas
   internas del dataset, en vez de imputar promedios. Los 6 restantes son 3 registros sin ningún salario, a los que se les
   imputó la media porque ni la regresión ni el KNN la mejoraron.
-- **Salarios:** la media casi no cambia (USD 90.250 → 90.412, +0,18 %), pero la dispersión crece
+- **Salarios:** la media casi no cambia (USD 90.250 → 90.409, +0,18 %), pero la dispersión crece
   (desvío +3,7 %, Gini 0,226 → 0,233). Solo el 40 % de los trabajadores quedó estable: el 31 % ganó
   más de un 5 % y el 30 % perdió más de un 5 %. **Hay una polarización moderada a nivel individual.**
-- **Puestos más vulnerables:** Atención al Cliente (59,7 % de riesgo medio), Camionero/a (59,2 %)
+- **Puestos más vulnerables:** Atención al Cliente (59,7 % de riesgo medio), Camionero/a (59,1 %)
   y Especialista en Marketing (46,6 %). **El nivel educativo no explica el riesgo** (r = −0,002).
 - **Perfil más resiliente:** Analista de Datos (bajo riesgo, suba salarial y mayor crecimiento de la
   demanda de habilidades), seguido por Ingeniero/a de Software (el riesgo más bajo del sector).
@@ -194,26 +194,26 @@ todos los salarios sean coherentes. Sobre el dataset limpio, las 5 reglas de neg
 
 ---
 
-## 4. Fase II — Análisis exploratorio (sector Tecnología, n = 1.790)
+## 4. Fase II — Análisis exploratorio (sector Tecnología, n = 1.793)
 
 ### 4.1 Distribución salarial y polarización
 
 | Estadístico | Antes de la IA | Después de la IA | Variación |
 |---|---:|---:|---:|
-| Media | USD 90.250 | USD 90.412 | +0,18 % |
-| Desvío estándar | USD 35.310 | USD 36.609 | **+3,68 %** |
-| Mediana | USD 90.528 | USD 90.533 | +0,01 % |
+| Media | USD 90.250 | USD 90.409 | +0,18 % |
+| Desvío estándar | USD 35.280 | USD 36.581 | **+3,69 %** |
+| Mediana | USD 90.450 | USD 90.513 | +0,07 % |
 | Coeficiente de variación | 39,1 % | 40,5 % | +3,5 % |
-| Percentil 10 | USD 41.365 | USD 41.616 | +0,6 % |
-| Percentil 90 | USD 138.993 | USD 140.876 | +1,4 % |
-| Ratio P90/P10 | 3,36 | 3,39 | +0,7 % |
+| Percentil 10 | USD 41.370 | USD 41.638 | +0,6 % |
+| Percentil 90 | USD 138.974 | USD 140.836 | +1,3 % |
+| Ratio P90/P10 | 3,36 | 3,38 | +0,7 % |
 | Coeficiente de Gini | 0,226 | 0,233 | **+3,2 %** |
 
 | Resultado individual | Trabajadores | % |
 |---|---:|---:|
-| Ganancia mayor a +5 % | 548 | 30,6 % |
+| Ganancia mayor a +5 % | 549 | 30,6 % |
 | Estable (±5 %) | 713 | 39,8 % |
-| Pérdida mayor a −5 % | 529 | 29,6 % |
+| Pérdida mayor a −5 % | 531 | 29,6 % |
 
 **Interpretación:** en promedio el sector "no se mueve", porque las subas y las bajas se compensan. Pero
 esa estabilidad agregada esconde una **polarización moderada**:
@@ -222,7 +222,7 @@ esa estabilidad agregada esconde una **polarización moderada**:
 - El percentil 90 sube más que el percentil 10, así que la brecha entre los que más y los que menos ganan se amplía.
 - 6 de cada 10 trabajadores tuvieron un cambio salarial mayor al 5 %, con proporciones casi iguales hacia arriba y hacia abajo.
 
-Por cuartil del salario previo, el cambio medio es pequeño en todos los tramos (entre −0,05 % y +0,47 %). Es decir, la
+Por cuartil del salario previo, el cambio medio es pequeño en todos los tramos (entre −0,03 % y +0,47 %). Es decir, la
 polarización no depende de cuánto ganaba cada persona antes de la IA.
 
 ![Salarios antes y después](../outputs/figuras/04_salarios_pre_post.png)
@@ -232,10 +232,10 @@ polarización no depende de cuánto ganaba cada persona antes de la IA.
 | Puesto | Riesgo medio | % en categoría "Alto" | Nivel educativo medio |
 |---|---:|---:|---:|
 | **Atención al Cliente** | 59,7 % | 49,7 % | 3,07 |
-| **Camionero/a** | 59,2 % | 47,0 % | 3,08 |
+| **Camionero/a** | 59,1 % | 46,5 % | 3,10 |
 | **Especialista en Marketing** | 46,6 % | 32,6 % | 3,05 |
 | _Promedio del sector_ | _45,7 %_ | — | _3,02_ |
-| _Ingeniero/a de Software (mínimo)_ | _35,2 %_ | _10,2 %_ | _3,10_ |
+| _Ingeniero/a de Software (mínimo)_ | _35,3 %_ | _10,2 %_ | _3,10_ |
 
 **Relación con el nivel educativo:** no existe. La correlación entre nivel educativo y riesgo es nula
 (Pearson −0,002; Spearman 0,002), y el riesgo medio por nivel educativo es casi constante (de 44,2 % a 47,0 %).
@@ -294,13 +294,13 @@ cambio salarial y el crecimiento de la demanda de habilidades; restan el riesgo 
 | Puesto | Riesgo | Cambio salarial | Crec. demanda | Urgencia | Índice |
 |---|---:|---:|---:|---:|---:|
 | **Analista de Datos** | 37,6 % | +0,50 % | **6,13 %** | 32,6 | **0,97** |
-| Ingeniero/a de Software | **35,2 %** | −0,22 % | 5,35 % | **31,4** | 0,65 |
+| Ingeniero/a de Software | **35,3 %** | −0,13 % | 5,42 % | **31,5** | 0,69 |
 | … | | | | | |
-| Atención al Cliente | 59,7 % | −1,05 % | 5,33 % | 41,4 | −1,19 |
+| Atención al Cliente | 59,7 % | −1,05 % | 5,33 % | 41,4 | −1,20 |
 
 El perfil más resiliente es **Analista de Datos**. Es el único que combina un riesgo bajo (2º más bajo del sector),
 suba salarial y el mayor crecimiento de demanda de sus habilidades. Ingeniero/a de Software tiene el riesgo
-más bajo (solo 10 % de registros en categoría "Alto"), pero su salario medio cae levemente (−0,22 %).
+más bajo (solo 10 % de registros en categoría "Alto"), pero su salario medio cae levemente (−0,13 %).
 
 ### Tres recomendaciones para un gremio tecnológico (próximos 3 años)
 
@@ -329,3 +329,4 @@ más bajo (solo 10 % de registros en categoría "Alto"), pero su salario medio c
   con la fórmula. Son el 0,17 % de la muestra, pero esos dos valores son estimados y no observados.
 - El índice de resiliencia da el mismo peso a sus cuatro indicadores. Con otros pesos el orden de los puestos
   intermedios podría cambiar, aunque los extremos (Analista de Datos arriba, Atención al Cliente abajo) son claros.
+  
