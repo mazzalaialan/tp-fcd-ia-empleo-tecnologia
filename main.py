@@ -87,7 +87,7 @@ def main():
     guardar_resultados(resultados)
 
     # FASE III: Visualizacion
-    generar_reporte(df_industria, resultados)
+    generar_reporte(df_limpio, resultados)
 
     #guardo la informacion de la bitacora hasta el momento(mover al final de fase 3, cuando ya haya sido revisada)
     guardar_tabla(obtener_bitacora(), "00_bitacora_saneamiento.csv")
