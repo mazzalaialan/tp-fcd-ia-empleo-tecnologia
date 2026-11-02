@@ -18,15 +18,6 @@ def validar_contrato_analisis(df):
     assert df.isnull().sum().sum() == 0, "No debe haber nulos"
 
 
-def filtrar_sector(df, sector):
-    """devuelvo solo las filas de una industria (por ejemplo "Tecnología"), con el índice reseteado"""
-    sector_df = df[df["industria"] == sector].copy()
-
-    # saco las categorías de puesto que quedaron sin filas
-    sector_df["puesto"] = sector_df["puesto"].cat.remove_unused_categories()
-    return sector_df.reset_index(drop=True)
-
-
 # parte 1: distribución salarial y polarización
 
 def calcular_gini(serie):
