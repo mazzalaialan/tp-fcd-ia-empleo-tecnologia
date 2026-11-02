@@ -7,7 +7,7 @@ y guarda los resultados. Ejecutar con:  python main.py
 
 import pandas as pd
 
-from src.analysis import calcular_estadisticas, filtrar_sector
+from src.analysis import calcular_estadisticas
 from src.clean_data import limpiar_dataframe
 from src.load_data import cargar_industria
 from src.audit import auditar_calidad, nulos_recuperables_por_formula, buscar_relaciones_exactas, asimetria_y_outliers, matriz_correlacion, comparar_salarios_sin_el_otro
@@ -80,9 +80,10 @@ def main():
     
    
    
-    # FASE II: Analisis del sector asignado
-    df_industria = filtrar_sector(df_limpio, SECTOR_ASIGNADO)
-    resultados = calcular_estadisticas(df_industria)
+    # FASE II: Analisis del sector asignado.
+
+# obtengo un diccionario con cada resultado
+    resultados = calcular_estadisticas(df_limpio)
     guardar_resultados(resultados)
 
     # FASE III: Visualizacion
