@@ -129,8 +129,9 @@ def recuperar_salario_despues(df):
 
 def recuperar_riesgo_automatizacion(df):
     """
-    reconstruyo automation_risk_percent faltante usando la identidad verificada
-    en el 100% de los registros completos:
+    reconstruyo automation_risk_percent faltante usando los coheficientes obtenidos en la regresion lineal 05
+    de la función 'buscar_relaciones_exactas': 
+    
         skill_transition_pressure = (skill_gap_index + automation_risk_percent) / 2
     """
     df = df.copy()
@@ -223,6 +224,7 @@ def etapa_inconsistencias(df):
     # los tres campos no pueden ser ciertos a la vez y no sé cuál es el verdadero
     mascara = detectar_contradiccion_salarial(df)
     df = eliminar_filas(df, mascara)
+    
     registrar_paso("Eliminar contradicción salarial (antes = después con cambio != 0)", mascara.sum(),
                    "Los tres campos (antes, después y % de cambio) no pueden ser ciertos a la vez y no se puede saber cuál es el verdadero. "
                    "Las filas figuran en la auditoría (00_auditoria_calidad.csv).")

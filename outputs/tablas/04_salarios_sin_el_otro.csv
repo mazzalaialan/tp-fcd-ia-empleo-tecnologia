@@ -1,0 +1,3 @@
+﻿columna,filas,r2_ajuste,r2_prediccion,error_media,error_regresion,error_knn
+salary_before_usd,1636,0.003,-0.011,34014.06,34137.98,37182.09
+salary_after_usd,1643,0.06,0.046,35938.79,34923.13,39301.93

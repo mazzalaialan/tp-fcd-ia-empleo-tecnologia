@@ -1,0 +1,4 @@
+﻿columna,nulos,recuperables_por_formula,formula,quedan_para_estadistica
+salary_after_usd,84,81,after = before * (1 + cambio/100),3
+salary_before_usd,90,87,before = after / (1 + cambio/100),3
+automation_risk_percent,79,79,riesgo = 2 * pressure - skill_gap,0

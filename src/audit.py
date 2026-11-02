@@ -12,9 +12,6 @@ from src.utils import COLUMNAS_TEXTO, convertir_monto_a_float
 # orden de la categoria de riesgo, para poder usarla en la correlacion
 ORDEN_RIESGO = {"Low": 0, "Medium": 1, "High": 2}
 
-# considero predictora a una columna si su correlacion con la columna a imputar es al menos esta
-UMBRAL_PREDICTORAS = 0.5
-
 # considero calculable con una formula a una columna si el r2 de su ajuste llega a este valor
 UMBRAL_RELACION_EXACTA = 0.9999
 
@@ -31,6 +28,7 @@ UMBRAL_RELACION_EXACTA = 0.9999
 
 def salarios_para_comparar(df):
     """devuelvo el salario antes, despues y el esperado segun el cambio % (copias temporales)"""
+    
     # convierto los montos de texto a numero (no modifico el df)
     antes = convertir_monto_a_float(df["salary_before_usd"])
     despues = convertir_monto_a_float(df["salary_after_usd"])
@@ -149,7 +147,14 @@ def hallazgos_puntaje(df):
 
 
 def hallazgos_relaciones(df):
-    """cuento las filas donde no se cumple cada relacion exacta entre columnas (tolerancia del 1%)"""
+    """
+    cuento las filas donde no se cumple cada relacion exacta entre columnas (tolerancia del 0,01%)
+
+    las formulas se plantearon a partir del significado de los nombres de las columnas
+    (porcentaje, producto, valor absoluto) y aca se verifica si se cumplen fila por fila.
+    
+    """
+   
     hallazgos = []
 
     # valores que deberian tener las columnas segun cada formula
@@ -158,20 +163,36 @@ def hallazgos_relaciones(df):
     # calculo la presion esperada como el promedio entre la brecha de habilidades y el riesgo
     presion_esperada = (df["skill_gap_index"] + df["automation_risk_percent"]) / 2
 
+    # disrupcion esperada: el riesgo ponderado por el nivel de adopcion de IA (la adopcion va de 0 a 100)
+    disrupcion_esperada = df["automation_risk_percent"] * df["ai_adoption_level"] / 100
+
+    # volatilidad esperada: cuanto cambio el salario, sin importar si subio o bajo
+    volatilidad_esperada = df["salary_change_percent"].abs()
+
     # columna (formula escrita, valor real, valor calculado con la formula)
     relaciones = {
         "salary_after_usd": ("salary_after = salary_before * (1 + salary_change/100)", despues, esperado),
-        "skill_transition_pressure": ("pressure = (skill_gap + automation_risk) / 2",
-                                      df["skill_transition_pressure"], presion_esperada),
+        "skill_transition_pressure": ("pressure = (skill_gap + automation_risk) / 2", df["skill_transition_pressure"], presion_esperada),
+         
+         "ai_disruption_intensity": ("disruption = automation_risk * ai_adoption / 100",
+                                    df["ai_disruption_intensity"], disrupcion_esperada),
+        "wage_volatility_index": ("volatility = abs(salary_change)",
+                                  df["wage_volatility_index"], volatilidad_esperada),
     }
 
     for columna, (formula, real, calculado) in relaciones.items():
         # solo comparo las filas donde existen los dos valores
         evaluadas = real.notna() & calculado.notna()
 
-        # tolero una diferencia de hasta el 1% del valor calculado, por los redondeos
-        cumplen = ((real - calculado).abs() <= 0.01 * calculado.abs())[evaluadas]
+        # diferencia entre el valor real y el que da la formula (sin signo)
+        diferencia = (real - calculado).abs()
 
+        # tolerancia: el 0,01% del valor calculado (el cambio % viene redondeado a 2 decimales)
+        tolerancia = 0.0001 * calculado.abs()
+
+        # True si la diferencia es menor o igual a la tolerancia; me quedo solo con las filas donde existen los dos valores
+        cumplen = (diferencia <= tolerancia)[evaluadas]
+        
         categoria = "Inconsistencias lógicas"
         problema = "No cumple la relación"
         cantidad = (~cumplen).sum()
@@ -193,7 +214,8 @@ def ids_en_texto(df, mascara):
 
 
 def hallazgos_salarios_puntuales(df):
-    """detecto dos errores concretos del salario posterior: fuera del limite del iqr e igual al anterior"""
+    """detecto dos errores concretos del salario posterior: fuera del limite del iqr (outlier) e igual al salario anterior"""
+    
     antes, despues, _ = salarios_para_comparar(df)
 
     # calculo el limite superior de la regla del iqr sobre el salario posterior, igual que en la limpieza
@@ -256,11 +278,10 @@ def matriz_correlacion(df):
 
 # parte 2: relaciones exactas entre columnas y nulos que se recuperan con ellas (no modifico el df)
 
-
 def buscar_relaciones_exactas(df):
     """
-    busco columnas que se puedan calcular con una formula a partir de otras dos (r2 casi 1)
-    la formula que guardo es objetivo = coef_1 * explicadora_1 + coef_2 * explicadora_2 + constante
+    busco columnas que se puedan calcular con una formula (mediante la regresion linearl) a partir de otras dos (r2 casi 1)
+    la formula que guardo es objetivo = coef_1 * explicadora_1 + coef_2 * explicadora_2 + intercepto. Para tabla 05
     """
     numericas = tabla_numerica(df)
 
@@ -285,10 +306,11 @@ def buscar_relaciones_exactas(df):
             if r2 >= UMBRAL_RELACION_EXACTA:
                 coef_1 = round(modelo.coef_[0], 2) + 0.0
                 coef_2 = round(modelo.coef_[1], 2) + 0.0
-                constante = round(modelo.intercept_, 2) + 0.0
-                relaciones.append((objetivo, x1, x2, coef_1, coef_2, constante, round(r2, 6), len(completas)))
+                intercepto = round(modelo.intercept_, 2) + 0.0
+                error = round(error_tipico(y, modelo.predict(x)), 2)
+                relaciones.append((objetivo, x1, x2, coef_1, coef_2, intercepto, round(r2, 6), error, len(completas)))
 
-    columnas_tabla = ["objetivo", "explicadora_1", "explicadora_2", "coef_1", "coef_2", "constante", "r2", "filas"]
+    columnas_tabla = ["objetivo", "explicadora_1", "explicadora_2", "coef_1", "coef_2", "intercepto", "r2", "error","filas"]
     return pd.DataFrame(relaciones, columns=columnas_tabla)
 
 
@@ -305,7 +327,7 @@ def nulos_recuperables_por_formula(df):
     nulos_antes = antes.isna().sum()
     nulos_riesgo = riesgo.isna().sum()
 
-    # de esos, cuento los que tienen en la misma fila los datos que pide la formula
+    # de esos, cuento los que tienen en la misma fila los datos que pide la formula.
     recuperables_despues = (despues.isna() & antes.notna() & cambio.notna()).sum()
     recuperables_antes = (antes.isna() & despues.notna() & cambio.notna()).sum()
     recuperables_riesgo = (riesgo.isna() & presion.notna() & brecha.notna()).sum()
@@ -318,6 +340,7 @@ def nulos_recuperables_por_formula(df):
     filas = [("salary_after_usd", nulos_despues, recuperables_despues, formula_despues),
              ("salary_before_usd", nulos_antes, recuperables_antes, formula_antes),
              ("automation_risk_percent", nulos_riesgo, recuperables_riesgo, formula_riesgo)]
+    
     columnas = ["columna", "nulos", "recuperables_por_formula", "formula"]
 
     tabla = pd.DataFrame(filas, columns=columnas)
@@ -361,66 +384,6 @@ def r2_de_regresion(x, y):
     return r2, r2_prediccion, error_regresion, error_media
 
 
-def comparar_imputacion(df):
-    """para cada columna con nulos calculo el r2 y el error tipico de la regresion, y el desvio de la columna imputada con media, regresion y knn"""
-    numericas = tabla_numerica(df)
-
-    # correlacion de cada columna con todas las demas, para elegir las predictoras
-    correlaciones = numericas.corr()
-    columnas_con_nulos = numericas.columns[numericas.isnull().any()]
-
-    filas = []
-    for objetivo in columnas_con_nulos:
-        # me quedo con las columnas cuya correlacion con el objetivo es al menos el umbral; saco la categoria
-        # de riesgo porque se deriva del porcentaje (uso errors="ignore" para evitar el error si ya no esta)
-        r = correlaciones[objetivo].drop([objetivo, "automation_risk_category"], errors="ignore")
-        predictoras = list(r[r.abs() >= UMBRAL_PREDICTORAS].index)
-        original = numericas[objetivo]
-
-        # metodo a: media
-        con_media = original.fillna(original.mean())
-
-        fila = {"columna": objetivo, "nulos": int(original.isna().sum()),
-                "predictoras": ", ".join(predictoras), "desvio_original": round(original.std(), 2),
-                "desvio_media": round(con_media.std(), 2)}
-
-        # necesito al menos una predictora para la regresion y el knn
-        if predictoras:
-            # uso solo las filas completas y saco los outliers del objetivo, como hizo el profe con fare
-            completas = numericas[[objetivo] + predictoras].dropna()
-            completas = sin_outliers(completas, objetivo)
-            x = completas[predictoras].to_numpy()
-            y = completas[objetivo].to_numpy()
-
-            # metodo b: regresion lineal; solo puedo predecir los nulos que tienen todas sus predictoras
-            modelo = LinearRegression()
-            modelo.fit(x, y)
-            se_puede_predecir = original.isna() & numericas[predictoras].notna().all(axis=1)
-            con_regresion = original.copy()
-
-            # uso to_numpy porque entrene el modelo con arrays y no con tablas
-            con_regresion[se_puede_predecir] = modelo.predict(numericas.loc[se_puede_predecir, predictoras].to_numpy())
-
-            # metodo c: vecino mas cercano (k=5), como el knnimputer de la clase; no escalo las columnas, como en la clase
-            imputado = KNNImputer(n_neighbors=5).fit_transform(numericas[[objetivo] + predictoras])
-
-            # tomo la primera columna del resultado, que es el objetivo ya completado
-            con_knn = pd.Series(imputado[:, 0], index=numericas.index)
-
-            # r2 de la regresion (ajuste y prediccion) y error tipico por fila de la regresion y de la media
-            r2, r2_prediccion, error_regresion, error_media = r2_de_regresion(x, y)
-            fila["r2_ajuste"] = round(r2, 3)
-            fila["r2_prediccion"] = round(r2_prediccion, 3)
-            fila["error_media"] = round(error_media, 2)
-            fila["error_regresion"] = round(error_regresion, 2)
-            fila["desvio_regresion"] = round(con_regresion.std(), 2)
-            fila["desvio_knn"] = round(con_knn.std(), 2)
-        filas.append(fila)
-
-    columnas = ["columna", "nulos", "predictoras", "r2_ajuste", "r2_prediccion", "desvio_original",
-                "error_media", "error_regresion", "desvio_media", "desvio_regresion", "desvio_knn"]
-    return pd.DataFrame(filas, columns=columnas)
-
 
 def error_tipico(real, predicho):
     """calculo la raiz del error cuadratico medio entre los valores reales y los predichos"""
@@ -440,7 +403,7 @@ def comparar_salarios_sin_el_otro(df):
     filas = []
     for objetivo in salarios:
         # me quedo con las filas que tienen todos los datos, para poder comparar contra el valor real
-        # y saco los outliers del salario, igual que en comparar_imputacion
+        # y saco los outliers del salario que voy a predecir
         completas = numericas[[objetivo] + predictoras].dropna()
         completas = sin_outliers(completas, objetivo)
         x = completas[predictoras].to_numpy()

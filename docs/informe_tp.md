@@ -20,8 +20,9 @@
   más de un 5 % y el 30 % perdió más de un 5 %. **Hay una polarización moderada a nivel individual.**
 - **Puestos más vulnerables:** Atención al Cliente (59,7 % de riesgo medio), Camionero/a (59,1 %)
   y Especialista en Marketing (46,6 %). **El nivel educativo no explica el riesgo** (r = −0,002).
-- **Perfil más resiliente:** Analista de Datos (bajo riesgo, suba salarial y mayor crecimiento de la
-  demanda de habilidades), seguido por Ingeniero/a de Software (el riesgo más bajo del sector).
+- **Perfil más resiliente:** Analista de Datos (bajo riesgo, suba salarial promedio y mayor crecimiento de la
+  demanda de habilidades), seguido de cerca por Ingeniero/a de Software (el riesgo más bajo del sector). El orden
+  entre ambos depende de cómo se ponderen los indicadores.
 - La urgencia de re-capacitación crece con la intensidad de la disrupción (r = 0,41): es una
   relación positiva pero moderada.
 
@@ -97,10 +98,10 @@ clave para la limpieza:
 | `indice_volatilidad_salarial = abs(cambio_salarial_pct)` | 1.800 de 1.804 filas (las 4 excepciones son las contradicciones) | Confirmar contradicciones salariales |
 | Categoría de riesgo: Low < 30 ≤ Medium < 60 ≤ High | Todas las filas | Coherencia entre % y categoría |
 
-La relación del riesgo se descubrió con una búsqueda automática (`05_relaciones_exactas.csv`): para cada
+La relación del riesgo se descubrió con una búsqueda automática (`02_relaciones_exactas.csv`): para cada
 columna se ajusta una regresión lineal contra todos los pares de las demás y se marca como fórmula si
 el R² llega a 0,9999. Apareció `riesgo_automatizacion_pct = 2 × presion_reconversion − indice_brecha_habilidades`
-(R² = 1 en 1.725 filas). Esa búsqueda solo ve combinaciones lineales de dos columnas, así que las
+(R² = 1 y error 0 en 1.725 filas). Esa búsqueda solo ve combinaciones lineales de dos columnas, así que las
 relaciones multiplicativas (salarios, disrupción) y la de valor absoluto (volatilidad) se verificaron aparte.
 
 ### Dos tipos de fórmula: explícita y descubierta
@@ -117,25 +118,19 @@ aplica siempre que se pueda y la otra funciona solo si hay datos de apoyo:
 
 En el riesgo, las otras columnas contienen toda la información del objetivo (el valor queda determinado
 por dos de ellas), por eso la combinación de columnas llega a un error de 0. En el salario, en cambio,
-ninguna otra columna lo determina: el R² de predicción es de apenas −0,011 a 0,046 (tabla 06). La única
+ninguna otra columna lo determina: el R² de predicción es de apenas −0,011 a 0,046 (tabla 04). La única
 información que lo define es el otro salario, y por eso, cuando faltan los dos, la fórmula deja de servir y
 solo queda la estadística.
 
-### Cuándo no alcanza la fórmula: comparación de métodos de imputación
+### Cuándo no alcanza la fórmula: los 3 registros sin ningún salario
 
-Con una fórmula exacta se recupera el valor **verdadero**, mientras que cualquier imputación estima con
-error. Lo comprobamos en el riesgo de automatización (`02_comparacion_imputacion.csv`), donde además existe
-una regresión razonable:
-
-| Método | Error típico (puntos de riesgo) |
-|---|---:|
-| Media | 21,3 |
-| Regresión lineal (R² de predicción 0,943) | 5,1 |
-| Fórmula | 0 |
+Con una fórmula exacta se recupera el valor **verdadero**: en la búsqueda automática el riesgo da R² = 1 y error 0
+(`02_relaciones_exactas.csv`), y ninguna estimación estadística puede mejorar eso. Por eso la media, la regresión
+o el KNN solo se consideran donde la fórmula no se puede aplicar.
 
 Quedan **3 registros sin ningún salario**, donde la fórmula no se puede aplicar porque faltan los dos
 datos. Para ellos probamos predecir cada salario con las 13 columnas numéricas restantes, sin usar
-el otro salario (`06_salarios_sin_el_otro.csv`; separación 80 % entrenamiento / 20 % prueba):
+el otro salario (`04_salarios_sin_el_otro.csv`; separación 80 % entrenamiento / 20 % prueba):
 
 | Salario | R² de ajuste | R² de predicción | Error media | Error regresión | Error KNN |
 |---|---:|---:|---:|---:|---:|
@@ -148,7 +143,7 @@ y el posterior se calcula con la fórmula.
 
 ### Asimetría y valores atípicos
 
-Con la regla del IQR (`03_asimetria_outliers.csv`) casi todas las variables son simétricas. Tienen cola derecha
+Con la regla del IQR (`05_asimetria_outliers.csv`) casi todas las variables son simétricas. Tienen cola derecha
 `indice_volatilidad_salarial` (0,99) y `intensidad_disrupcion_ia` (1,06), lo esperable en variables que
 son un valor absoluto y un producto, y `salario_despues_usd` (1,98), por un único valor: el ×10. El IQR
 marca ese salario como atípico, y la relación con el % de cambio confirma que es un error de carga. Los demás extremos
@@ -221,6 +216,7 @@ esa estabilidad agregada esconde una **polarización moderada**:
 - El desvío y el Gini crecen más de un 3 %.
 - El percentil 90 sube más que el percentil 10, así que la brecha entre los que más y los que menos ganan se amplía.
 - 6 de cada 10 trabajadores tuvieron un cambio salarial mayor al 5 %, con proporciones casi iguales hacia arriba y hacia abajo.
+- Los extremos se abren: el salario mínimo baja de USD 30.032 a 24.312 y el máximo sube de USD 149.870 a 178.239.
 
 Por cuartil del salario previo, el cambio medio es pequeño en todos los tramos (entre −0,03 % y +0,47 %). Es decir, la
 polarización no depende de cuánto ganaba cada persona antes de la IA.
@@ -238,14 +234,14 @@ polarización no depende de cuánto ganaba cada persona antes de la IA.
 | _Ingeniero/a de Software (mínimo)_ | _35,3 %_ | _10,2 %_ | _3,10_ |
 
 **Relación con el nivel educativo:** no existe. La correlación entre nivel educativo y riesgo es nula
-(Pearson −0,002; Spearman 0,002), y el riesgo medio por nivel educativo es casi constante (de 44,2 % a 47,0 %).
+(Pearson −0,002; Spearman 0,001), y el riesgo medio por nivel educativo es casi constante (de 44,2 % a 47,0 %).
 En los tres puestos de mayor riesgo, los registros se reparten de forma pareja entre los niveles 1 a 5
 (entre 17 % y 24 % en cada nivel). En este dataset, **la vulnerabilidad depende de la tarea que realiza el puesto, no de
 la credencial educativa**.
 
 ### 4.3 Inconsistencias de negocio
 
-Se detectaron y trataron en la limpieza (ver bitácora, pasos 6 a 8 y 14): 1 salario ×10, 4 contradicciones
+Se detectaron y trataron en la limpieza (ver bitácora, pasos 6 a 8): 1 salario ×10, 4 contradicciones
 antes = después y 7 puntajes fuera de escala. Se verificó que, después del tratamiento, ninguna regla de negocio
 queda violada.
 
@@ -257,38 +253,35 @@ queda violada.
 
 ![Histograma de riesgo](../outputs/figuras/01_histograma_riesgo.png)
 
-La distribución es unimodal, centrada en el tramo "Medio", y prácticamente simétrica: la media (45,7 %) y la mediana
-(45,5 %) casi coinciden. Por encima del 80 % de riesgo la cantidad de registros cae fuerte. La mayor parte del sector
-está en riesgo medio, no extremo.
+La distribución es ancha y bastante plana, sin un pico marcado; la media (45,7 %) y la mediana (45,5 %) casi
+coinciden. El tramo medio concentra el 44 % de los registros (28 % en bajo y 29 % en alto) y solo el 4,5 % supera
+el 80 % de riesgo.
 
 ### Cambio salarial por puesto
 
 ![Cambio salarial por puesto](../outputs/figuras/02_cambio_salarial_por_puesto.png)
 
-Los cambios medios son chicos (entre −1,05 % y +1,36 %). Atención al Cliente, que es el puesto de mayor
-riesgo, también es el que más pierde salario. Especialista en Marketing (3º en riesgo) es el segundo que más pierde.
-Así, en los puestos más expuestos, riesgo alto y pérdida salarial aparecen juntos.
+Los cambios son chicos (de −1,05 % a +1,36 %). Atención al Cliente, el puesto de mayor riesgo, es el que más pierde
+y Especialista en Marketing (3º en riesgo) es el segundo; la excepción es Camionero/a, 2º en riesgo, que sube
++0,31 %. Con unos 180 registros por puesto, cada promedio tiene un error estándar de unos 0,7 puntos, así que es una
+tendencia y no un resultado firme.
 
 ### Urgencia de re-capacitación vs. intensidad de disrupción
 
 ![Dispersión](../outputs/figuras/03_dispersion_urgencia_disrupcion.png)
 
-La relación es positiva y moderada (r = 0,41; pendiente 0,28). La nube tiene forma de abanico: con
-disrupción baja hay urgencias de todo tipo (de 5 a 70), y con disrupción alta casi no aparecen urgencias bajas.
-Una disrupción alta es **suficiente** para que la urgencia sea alta, pero no es **necesaria**. La urgencia
-también depende de la brecha de habilidades.
+La relación es positiva y moderada (r = 0,41; pendiente 0,28). Con disrupción alta casi no hay urgencias bajas
+(2 de los 449 registros del cuarto superior tienen menos de 20), pero con disrupción baja hay de todo. La urgencia se
+explica mejor por la brecha de habilidades (r = 0,72) que por la disrupción.
 
 ---
 
 ## 6. Fase IV — Reflexión crítica
 
-> **Nota para el grupo:** esta sección es un borrador basado en las tablas generadas. Para la defensa oral,
-> revísenla y escríbanla con sus propias palabras.
-
 ### ¿Qué perfil tecnológico es más resiliente?
 
-Construimos un **índice de resiliencia**: el promedio de los puntajes z de cuatro indicadores. Suman el
-cambio salarial y el crecimiento de la demanda de habilidades; restan el riesgo y la urgencia de re-capacitación
+Armamos un **índice de resiliencia** simple: el promedio de cuatro puntajes z. Suman el cambio salarial y el
+crecimiento de la demanda de habilidades, y restan el riesgo de automatización y la urgencia de re-capacitación
 (`resiliencia_puestos.csv`).
 
 | Puesto | Riesgo | Cambio salarial | Crec. demanda | Urgencia | Índice |
@@ -298,22 +291,26 @@ cambio salarial y el crecimiento de la demanda de habilidades; restan el riesgo 
 | … | | | | | |
 | Atención al Cliente | 59,7 % | −1,05 % | 5,33 % | 41,4 | −1,20 |
 
-El perfil más resiliente es **Analista de Datos**. Es el único que combina un riesgo bajo (2º más bajo del sector),
-suba salarial y el mayor crecimiento de demanda de sus habilidades. Ingeniero/a de Software tiene el riesgo
-más bajo (solo 10 % de registros en categoría "Alto"), pero su salario medio cae levemente (−0,13 %).
+Analista de Datos queda primero (0,97) e Ingeniero/a de Software segundo (0,69). Son los dos puestos con menor riesgo
+(37,6 % y 35,3 %) y menor urgencia, y quedan casi empatados: si el índice usa solo riesgo y urgencia, Ingeniero/a de
+Software pasa al primer lugar. Eso pasa porque las diferencias de salario y de demanda entre puestos son del tamaño
+del error de la muestra (alrededor de 0,7 puntos de error estándar por puesto). Lo estable es el otro extremo:
+Atención al Cliente (−1,20) y Camionero/a (−0,91) quedan últimos en todas las variantes que probamos con el riesgo
+incluido.
 
 ### Tres recomendaciones para un gremio tecnológico (próximos 3 años)
 
-1. **Priorizar la reconversión de Atención al Cliente y Camionero/a.** Tienen ~60 % de riesgo medio,
-   casi la mitad de sus registros en categoría "Alto" y la mayor urgencia de re-capacitación (más de 40). Conviene orientar
-   los programas hacia las habilidades de los perfiles resilientes (análisis de datos, software).
-2. **Negociar formación en habilidades, no solo títulos.** El nivel educativo no protege del
-   riesgo (r ≈ 0). Lo que diferencia a los perfiles resilientes es la demanda de sus habilidades,
-   así que la capacitación técnica continua debería ser parte de los convenios.
-3. **Proteger frente a la volatilidad salarial, no solo frente a la baja del promedio.** El salario medio
-   no cambia, pero el 60 % de los trabajadores tuvo variaciones mayores al ±5 % y la desigualdad crece.
-   Sugerimos negociar pisos salariales o cláusulas de transición y usar la intensidad de disrupción por puesto
-   como alerta temprana de necesidad de re-capacitación.
+1. **Priorizar la reconversión de Atención al Cliente y Camionero/a.** Tienen el riesgo más alto (cerca del 60 %),
+   casi la mitad de sus registros en categoría "Alto" y la mayor urgencia de re-capacitación (más de 40).
+2. **Formar en habilidades, no según el título.** El nivel educativo no se relaciona con el riesgo (r ≈ 0), mientras
+   que la urgencia de re-capacitación se relaciona más con la brecha de habilidades (r = 0,72) que con la disrupción
+   (r = 0,41). Los programas deberían apuntar a cerrar esa brecha.
+3. **Mirar la dispersión salarial y no solo el promedio.** El salario medio casi no cambia (+0,18 %), pero 6 de cada
+   10 trabajadores tuvo una variación mayor a ±5 % y el Gini sube de 0,226 a 0,233. Proponemos pisos salariales o
+   cláusulas de transición, y usar la intensidad de disrupción de cada puesto como aviso temprano.
+
+Como los datos son sintéticos, estas recomendaciones valen como ejercicio del método más que como diagnóstico del
+mercado.
 
 ---
 
@@ -328,5 +325,5 @@ más bajo (solo 10 % de registros en categoría "Alto"), pero su salario medio c
 - En 3 registros sin ningún salario se imputó la media del salario previo (USD 90.250,49) y el posterior se calculó
   con la fórmula. Son el 0,17 % de la muestra, pero esos dos valores son estimados y no observados.
 - El índice de resiliencia da el mismo peso a sus cuatro indicadores. Con otros pesos el orden de los puestos
-  intermedios podría cambiar, aunque los extremos (Analista de Datos arriba, Atención al Cliente abajo) son claros.
-  
+  intermedios podría cambiar, y también el primer lugar entre Analista de Datos e Ingeniero/a de Software. El extremo
+  inferior (Atención al Cliente y Camionero/a) es estable.

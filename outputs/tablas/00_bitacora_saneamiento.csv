@@ -1,2 +1,16 @@
 ﻿paso,filas_afectadas,justificacion
 Se incluyeron filas con variantes de 'Technology',267,"Espacios, minúsculas y mayúsculas distintas: sin normalizar se habrían perdido esas filas."
+Eliminar duplicados exactos,7,Registros idénticos (incluido job_id) inflan conteos y sesgan medias.
+Normalizar escritura de 'industry',265,"Variantes como ' Technology ', 'TECHNOLOGY' o 'technology' son la misma categoría."
+Castear salarios a float,161,"Montos guardados como texto ('$32,820.29') impiden operar numéricamente."
+Castear año a entero,39,El año es una variable discreta; '2021.0' y '2021' deben ser el mismo valor.
+Anular salario posterior atípico (se recalcula por fórmula),1,"Supera el límite superior de la regla del IQR y resulta unas 10 veces el esperado según salario previo y % de cambio: error de carga. Se anula y se recupera con la fórmula, como los demás salarios."
+Eliminar contradicción salarial (antes = después con cambio != 0),4,"Los tres campos (antes, después y % de cambio) no pueden ser ciertos a la vez y no se puede saber cuál es el verdadero. Las filas figuran en la auditoría (00_auditoria_calidad.csv)."
+"Acotar ai_replacement_score a [0, 100]",7,Es un puntaje en escala 0-100 (igual que el riesgo); valores > 100 son ruido fuera de escala.
+Recuperar salario previo por fórmula,87,"salary_change_percent es completo: antes = después / (1 + cambio%/100). Valor exacto, no estimado."
+Recuperar salario posterior por fórmula,81,"después = antes * (1 + cambio%/100). Valor exacto, no estimado. Incluye el salario anulado por atípico."
+Imputar salario previo con la media (registros sin ningún salario),3,Sin ningún salario la fórmula no aplica. La regresión lineal con las demás columnas tiene un R² de predicción cercano a 0 y no mejora a la media; se imputa la media de la columna.
+Recuperar salario posterior por fórmula sobre el salario imputado,3,después = antes * (1 + cambio%/100) con el salario previo estimado; mantiene la coherencia con el % de cambio.
+Recuperar riesgo de automatización por fórmula,79,Identidad verificada en el 100% de filas completas: presión = (brecha + riesgo) / 2.
+Recalcular categoría de riesgo (umbrales 30/60),0,Garantiza coherencia entre el % de riesgo y su categoría Low/Medium/High.
+Traducir al español y asignar tipos,1793,"Lectura fluida en español; categóricos como 'category', numéricos como float, índice reseteado."
